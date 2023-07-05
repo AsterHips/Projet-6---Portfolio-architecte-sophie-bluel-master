@@ -154,7 +154,7 @@ const createOptionModal = (id, name) => {
 
 const createWorksGalleryModal = (works) => {
     modalGalleryElement.innerHTML = "";
-    works.forEach((work, index) => {
+    works.forEach((work) => {
         const item = document.createElement("div");
         const imageItem = document.createElement("img");
         const editerItem = document.createElement("button");
