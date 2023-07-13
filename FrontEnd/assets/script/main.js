@@ -7,8 +7,8 @@ const modalElement2 = document.getElementById("modal-2");
 const modalGalleryElement = document.querySelector(".galerie-modifications");
 const boutonActionModal = document.querySelector(".bouton-modal");
 const boutonAjouterPhotoPreview = document.querySelector(".bouton-ajouter-photo");
-const boutonAjoutPreview = document.getElementById("work-image");
 const divAjoutPhoto = document.querySelector(".ajout-photo");
+const boutonAjoutPreview = document.getElementById("work-image");
 const inputTitreWork = document.getElementById("work-title");
 const listOptionModal = document.getElementById("work-category");
 const optionElement = document.createElement("option");
@@ -36,6 +36,7 @@ const afficherBandeauEdition = () => {
     headerSite.classList.replace("header-site", "header-site-edition");
     modeEditionTitre.textContent = "Mode édition";
     boutonPublier.classList.add("bouton-publier");
+    categoriesElement.style.display = "none";
 
     editionBandeauElement.appendChild(editionIcone);
     editionBandeauElement.appendChild(modeEditionTitre);
@@ -63,9 +64,15 @@ if (isLogged !== null && userId === 1) {
 
 const getWorks = async () => {
     worksItems = [];
-    await fetch("http://localhost:5678/api/works")
-        .then((response) => response.json())
-        .then((response) => worksItems.push(...response));
+    try {
+        const response = await fetch("http://localhost:5678/api/works");
+        const data = await response.json();
+        if (response.ok) {
+            worksItems.push(...data);
+        }
+    } catch (error) {
+        console.log(error);
+    }
 };
 
 const createWorks = (works) => {
@@ -86,9 +93,15 @@ const createWorks = (works) => {
 };
 
 const getCategories = async () => {
-    await fetch("http://localhost:5678/api/categories")
-        .then((response) => response.json())
-        .then((response) => categoriesItems.push(...response));
+    try {
+        const response = await fetch("http://localhost:5678/api/categories");
+        const data = await response.json();
+        if (response.ok) {
+            categoriesItems.push(...data);
+        }
+    } catch (error) {
+        console.log(error);
+    }
 };
 
 const createButtonFilter = (id, name) => {
@@ -254,7 +267,7 @@ const closeModal = () => {
         modalElement2
             .querySelector(".ajout-photo-modal")
             .removeEventListener("click", stopPropagation);
-            
+
         resetForm();
     }
 
@@ -282,9 +295,11 @@ const supprimerVignette = async (e) => {
             body: JSON.stringify(),
         });
 
-        await getWorks();
-        createWorks(worksItems);
-        createWorksGalleryModal(worksItems);
+        if (response.status === 204) {
+            await getWorks();
+            createWorks(worksItems);
+            createWorksGalleryModal(worksItems);
+        }
     }
 };
 
@@ -310,6 +325,22 @@ const resetForm = () => {
     apercuPhoto.style.display = "none";
 };
 
+formulaireAjout.addEventListener("change", () => {
+    checkFormulaire();
+});
+
+const checkFormulaire = () => {
+    if (
+        boutonAjoutPreview.files[0] !== undefined &&
+        inputTitreWork.value !== "" &&
+        listOptionModal.value !== "0"
+    ) {
+        boutonValidationAjout.disabled = false;
+    } else {
+        boutonValidationAjout.disabled = true;
+    }
+};
+
 formulaireAjout.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -331,7 +362,7 @@ formulaireAjout.addEventListener("submit", async (e) => {
     ) {
         messageAjout.style.display = "block";
         messageAjout.textContent =
-            "Une erreur est survenue, vérifiez que le formulaire est bien renseigné.";
+            "Une erreur est survenue, vérifiez le formulaire.";
         setTimeout(() => {
             messageAjout.style.display = "none";
             messageAjout.textContent = "";
